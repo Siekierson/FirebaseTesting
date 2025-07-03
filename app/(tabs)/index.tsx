@@ -1,45 +1,68 @@
 import React, { useState } from 'react';
 import { Button, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-export default function TodoApp() {
-  const [task, setTask] = useState('');
-  const [tasks, setTasks] = useState<string[]>([]);
+type Account = {
+  id: string;
+  name: string;
+  balance: number;
+};
 
-  const addTask = () => {
-    if (task.trim()) {
-      setTasks([...tasks, task]);
-      setTask('');
+export default function BankingApp() {
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [name, setName] = useState('');
+  const [balance, setBalance] = useState('');
+
+  const addAccount = () => {
+    if (name.trim() && balance.trim() && !isNaN(Number(balance))) {
+      setAccounts([
+        ...accounts,
+        { id: Date.now().toString(), name, balance: Number(balance) },
+      ]);
+      setName('');
+      setBalance('');
+      // tutaj możesz wywołać logowanie eventu do Firebase Analytics
     }
   };
 
-  const removeTask = (index: number) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+  const removeAccount = (id: string) => {
+    setAccounts(accounts.filter(acc => acc.id !== id));
+    // tutaj możesz wywołać logowanie eventu do Firebase Analytics
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Simple Todo App</Text>
+      <Text style={styles.title}>Bank Accounts</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Add a new task"
-          value={task}
-          onChangeText={setTask}
+          placeholder="Account name"
+          value={name}
+          onChangeText={setName}
         />
-        <Button title="Add" onPress={addTask} />
+        <TextInput
+          style={styles.input}
+          placeholder="Balance"
+          value={balance}
+          onChangeText={setBalance}
+          keyboardType="numeric"
+        />
+        <Button title="Add" onPress={addAccount} />
       </View>
       <FlatList
-        data={tasks}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.taskContainer}>
-            <Text style={styles.task}>{item}</Text>
-            <TouchableOpacity onPress={() => removeTask(index)}>
+        data={accounts}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.accountContainer}>
+            <View>
+              <Text style={styles.accountName}>{item.name}</Text>
+              <Text style={styles.accountBalance}>Balance: {item.balance} PLN</Text>
+            </View>
+            <TouchableOpacity onPress={() => removeAccount(item.id)}>
               <Text style={styles.remove}>Remove</Text>
             </TouchableOpacity>
           </View>
         )}
-        ListEmptyComponent={<Text style={styles.empty}>No tasks yet.</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>No accounts yet.</Text>}
       />
     </View>
   );
@@ -60,6 +83,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     marginBottom: 20,
+    gap: 8,
   },
   input: {
     flex: 1,
@@ -67,9 +91,8 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    marginRight: 10,
   },
-  taskContainer: {
+  accountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -77,8 +100,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  task: {
+  accountName: {
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  accountBalance: {
+    fontSize: 14,
+    color: '#555',
   },
   remove: {
     color: 'red',
